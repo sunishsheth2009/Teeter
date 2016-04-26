@@ -1,5 +1,7 @@
 package com.sunish.barrelrace;
 
+import java.util.ArrayList;
+
 import android.support.v7.app.ActionBarActivity;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -11,6 +13,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
@@ -22,18 +25,26 @@ import android.view.WindowManager;
 
 public class MainActivity extends ActionBarActivity implements SensorEventListener {
 	DrawView drawView;
-	 private SensorManager mSensorManager;
-	 private Sensor mAccelerometer;
-	 float x1,y1,z1;
-	 float ratiox;
-	 float ratioy;
-	 float maxWidhtAcceleromter;
-	 //Context context;
-
+	private SensorManager mSensorManager;
+	private Sensor mAccelerometer;
+	float x1,y1;
+	float ratiox;
+	float ratioy;
+	float maxWidhtAcceleromter;
+	float last_x1 = 0;
+	float last_y1 = 0;
+	int x,y;
+	Context context;
+    ArrayList<Integer> xarray = new ArrayList();
+    ArrayList<Integer> yarray = new ArrayList();
+    int start = 0;
+    int InitialSetup = 0;
+	 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         drawView = new DrawView(this);
         drawView.setBackgroundColor(Color.WHITE);
         setContentView(drawView);
@@ -63,14 +74,14 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     public void setSensor(){
     	mSensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
     	mAccelerometer =mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-    	mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL );
+    	mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_FASTEST );
     	maxWidhtAcceleromter = mAccelerometer.getMaximumRange();
     }
     
     @Override
     protected void onResume() {
       super.onResume();
-      mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+      mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     @Override
@@ -129,11 +140,24 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 			 //x1 = (int) Math.pow(mAccelerometer.values[1], 2); 
              //y1 = (int) Math.pow(mAccelerometer.values[2], 2);*/
 			
-			x1 = mAccelerometer.values[0];
+			x1 = -mAccelerometer.values[0];
 	    	y1 = mAccelerometer.values[1];
-	    	z1 = mAccelerometer.values[2];
 	    	
-	    	if(x1<0){
+	    	/*final float alpha = 0.10f;
+	    	//final float sensi = 1f/128;
+	    	float a = 0,b = 0,c = 0;
+	    	a = alpha * a + (1 - alpha) * mAccelerometer.values[0];
+	    	b = alpha * b + (1 - alpha) * mAccelerometer.values[1];
+	    	c = alpha * c + (1 - alpha) * mAccelerometer.values[2];
+	    	  
+	    	// Remove the gravity contribution with the high-pass filter.
+	    	x1 = mAccelerometer.values[0] - a;
+	    	y1 = mAccelerometer.values[1] - b;
+	    	z1 = mAccelerometer.values[2] - c;*/
+	    	//x1 = x1 * sensi;
+	    	//y1 = y1 * sensi;
+	    	//z1 = z1 * sensi;
+	    	/*if(x1<0){
 	    		x1 = -(int) Math.pow(mAccelerometer.values[0], 2);	
 	    	}else{
 	    		x1 = (int) Math.pow(mAccelerometer.values[0], 2);	
@@ -142,13 +166,21 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 	    		y1 = -(int) Math.pow(mAccelerometer.values[1], 2);
 	    	}else{
 	    		y1 = (int) Math.pow(mAccelerometer.values[1], 2);
-	    	}
-	    	if(z1<0){
-	    		z1 = -(int) Math.pow(mAccelerometer.values[2], 2);	
-	    	}else{
-	    		z1 = (int) Math.pow(mAccelerometer.values[2], 2);	
-	    	}
-	    	//Log.i("values", "x -->" + x1 + "y -->" + y1 + " z--> "+ z1);
+	    	}*/
+    		//x1 = (int) Math.pow(mAccelerometer.values[0], 3);	
+    		//y1 = (int) Math.pow(mAccelerometer.values[1], 3);
+	    	//int flag = 1;
+			//Log.i("values", "x -->" + x1 + "y -->" + y1 + " z--> "+ z1);
+	    	/*float new_x1 = (float) (((x/2)-(x1*ratiox)));
+	    	float new_y1 = (float) (((0.95 * y)+(y1*ratioy)));
+			Log.i("values", "last_x -->" + last_x1 + "last_y -->" + last_y1 + " new_x1--> "+ new_x1 + "new_y1--> "+ new_y1);
+	    	if(last_x1-new_x1 > 46 || new_x1-last_x1 > 46 || last_y1-new_y1 > 46 || new_y1-last_y1 > 46 ){
+	    		flag  = 0;
+	    	}if((last_x1-x1 < 90 || x1-last_x1 < 90 || last_y1-y1 < 90 || last_y1-y1 < 90) && flag == 0 ){
+	    		drawView.invalidate();
+	    		last_x1 = new_x1;
+	    		last_y1 = new_y1;
+	    	}*/
 	    	drawView.invalidate();
 		}
 		
@@ -174,34 +206,135 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 		}
 		
 		public void onDraw(Canvas canvas) {
+			//Log.i("Hello","InDraw");
+		    Vibrator v = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
 			p.setStyle(Paint.Style.STROKE);
-			int x=getWidth();
-			int y=getHeight();
-			//Log.i("width", "x1 " + x + "y1" + (float)y);
-			ratiox = (x)/(2*maxWidhtAcceleromter);
-			ratiox = ratiox/2;
-			float yy = (float) ((2*y/3) - (0.025 * y));
-			ratioy = yy/(maxWidhtAcceleromter);
-	    	Log.i("YY", "YY -->" + yy + "Max Acc" + maxWidhtAcceleromter + "Ratio" + ratioy);
-			//ratioy = (ratioy/3);
-	    	//Log.i("Ratio", "Ratio -->" + ratio + "Max Acc" + maxWidhtAcceleromter + "Max Width" + x);
 	        p.setStrokeWidth(20);
+	        p.setColor(Color.BLACK);
+	        x=getWidth();
+			y=getHeight();
+			//long startTime = 0;
+			if(start == 0){
+		        xarray.add(x/2);
+		        yarray.add((int) (0.95 * y));
+		        start++;
+		    	//startTime = System.nanoTime();
+			}
 	        canvas.drawRect(0, 1*y/3, x, (float) (y-0.1*y) , p);
+	        p.setColor(Color.WHITE);
+	        canvas.drawLine((float) ((x/2) - ((0.025 * y)*3)) , (float)(y-0.1*y), (float)((x/2) + (0.025 * y)*3), (float)(y-0.1*y), p);
 	        p.setStrokeWidth(5);
+	        p.setColor(Color.BLACK);
 	        canvas.drawCircle((float)x/4, (float) 0.51 * y , (float) 0.025 * y, p);
+	        p.setColor(Color.BLACK);
 	        canvas.drawCircle((float)3*x/4, (float) 0.51 * y , (float) 0.025 * y, p);
+	        p.setColor(Color.BLACK);
 	        canvas.drawCircle((float)x/2, (float) 0.75 * y , (float) 0.025 * y, p);
-	        if((int)(x1*ratiox)+0.025 * y > (int)(getWidth()/2)){
+	        p.setColor(Color.RED);
+			//ratiox = x/(maxWidhtAcceleromter);
+			//ratioy = y/(maxWidhtAcceleromter);
+			int newx1 = (int) (((Integer)xarray.get(xarray.size()-1) + x1));
+			int newy1 = (int) (((Integer)yarray.get(xarray.size()-1) + y1));
+			//Log.i("XY","X----> " + newx1+ "Y---> " + newy1);
+			if(InitialSetup == 0){
+				if(newx1 - (0.025 * y)  > ((x/2) - ((0.025 * y)*3)) && newx1 + (0.025 * y)< ((x/2) + ((0.025 * y)*3)) && newy1 < ((y-0.1*y) + (0.025 * y)) ){
+					xarray.add(newx1);
+					yarray.add(newy1);
+					InitialSetup = 1;
+				}
+				if(newy1 + (0.025 * y)  > (getHeight()) && newx1 < 0 + 0.025 * y){
+			        canvas.drawCircle((float)0.025 * y, (float) (getHeight()-(0.025*y)) , (float) 0.025 * y, p);
+		        }else if(newy1 + (0.025 * y)  > (getHeight()) && (newx1+0.025 * y > (getWidth()))){
+		        	canvas.drawCircle((float)(getWidth()-(0.025 * y)) , (float) (getHeight()-(0.025*y)) , (float) 0.025 * y, p);
+		        }else if(newy1  < ((y-0.1*y) + (0.025 * y)) && newx1 < 0 + 0.025 * y){
+		        	canvas.drawCircle((float)0.025 * y, (float) ((y-0.1*y) + (0.025 * y)) , (float) 0.025 * y, p);
+		        }else if(newy1  < ((y-0.1*y) + (0.025 * y)) && newx1+0.025 * y > (getWidth())){
+		        	canvas.drawCircle((float)(getWidth()-(0.025 * y)), (float) ((y-0.1*y) + (0.025 * y)) , (float) 0.025 * y, p);
+		        }else if( newx1 < 0 + 0.025 * y){
+		        	canvas.drawCircle( (float)0.025 * y , (float) newy1 , (float) 0.025 * y, p);
+		        }else if(newx1+0.025 * y > (getWidth())){
+		       		canvas.drawCircle( (float)(getWidth()-(0.025 * y)) , (float) newy1 , (float) 0.025 * y, p);
+		        }else if(newy1 + (0.025 * y)  > (getHeight())){
+			        canvas.drawCircle((float) newx1, (float) (getHeight()-(0.025*y)) , (float) 0.025 * y, p);
+		        }else if(newy1  < ((y-0.1*y) + (0.025 * y))){
+			        canvas.drawCircle((float) newx1, (float) ((y-0.1*y) + (0.025 * y)) , (float) 0.025 * y, p);
+		        }else{
+			        canvas.drawCircle((float)newx1, (float) newy1 , (float) 0.025 * y, p);
+					xarray.add(newx1);
+					yarray.add(newy1);
+			    }		
+			}else{
+				if(newx1  > ((x/2) - ((0.025 * y)*3)) && newx1 + (0.025 * y)  < ((x/2) + ((0.025 * y)*3)) && newy1 > ((y-0.1*y) + (0.025 * y)) ){
+					InitialSetup = 0;
+				}
+				if(newy1 + (0.025 * y)  > (getHeight()) && newx1 < 0 + 0.025 * y){
+			        canvas.drawCircle((float)0.025 * y, (float) (getHeight()-(0.025*y)) , (float) 0.025 * y, p);
+		        }else if(newy1 + (0.025 * y)  > (getHeight()) && (newx1+0.025 * y > (getWidth()))){
+		        	canvas.drawCircle((float)(getWidth()-(0.025 * y)) , (float) (getHeight()-(0.025*y)) , (float) 0.025 * y, p);
+		        }else if(newy1  < (1*getHeight()/3 + (0.025 * y)) && newx1 < 0 + 0.025 * y){
+		        	canvas.drawCircle((float)0.025 * y, (float) ((getHeight()/3)+(0.025*y)) , (float) 0.025 * y, p);
+		        }else if(newy1  < (1*getHeight()/3 + (0.025 * y)) && newx1+0.025 * y > (getWidth())){
+		        	canvas.drawCircle((float)(getWidth()-(0.025 * y)), (float) ((getHeight()/3)+(0.025*y)) , (float) 0.025 * y, p);
+		        }else if( newx1 < 0 + 0.025 * y){
+		        	canvas.drawCircle( (float)0.025 * y , (float) newy1 , (float) 0.025 * y, p);
+		        }else if(newx1+0.025 * y > (getWidth())){
+		       		canvas.drawCircle( (float)(getWidth()-(0.025 * y)) , (float) newy1 , (float) 0.025 * y, p);
+		        }else if((newx1 < ((x/2) - ((0.025 * y)*3)) || newx1 > ((x/2) + ((0.025 * y)*3))) && newy1 + (0.025 * y)  > ((y-0.1*y))){
+					//Log.i("XY1","X----> " + newx1+ "Y---> " + newy1);
+			        canvas.drawCircle((float) newx1, (float) ((y-0.1*y)-(0.025*y)) , (float) 0.025 * y, p);
+		        }else if(newy1  < (1*getHeight()/3 + (0.025 * y))){
+			        canvas.drawCircle((float) newx1, (float) ((getHeight()/3)+(0.025*y)) , (float) 0.025 * y, p);
+		        }else{
+					//Log.i("XY2","X----> " + newx1+ "Y---> " + newy1);
+			        canvas.drawCircle((float)newx1, (float) newy1 , (float) 0.025 * y, p);
+					xarray.add(newx1);
+					yarray.add(newy1);
+			    }	
+			}
+			
+			float dist1 = (float) Math.sqrt((newx1 - x/4)*(newx1 - x/4) + (newy1 - 0.51*y)*(newy1 - 0.51*y));
+			float dist2 = (float) Math.sqrt((newx1 - 3*x/4)*(newx1 - 3*x/4) + (newy1 - 0.51*y)*(newy1 - 0.51*y));
+			float dist3 = (float) Math.sqrt((newx1 - x/2)*(newx1 - x/2) + (newy1 - 0.75*y)*(newy1 - 0.75*y));
+			
+			if(dist1 < (0.025 * y) + (0.025 * y)|| dist2 < (0.025 * y) + (0.025 * y)|| dist3 < (0.025 * y) + (0.025 * y)){
+				/*long endTime = System.nanoTime();
+				long duration = (endTime - startTime);
+				duration = duration/ (1000*60) % 60;
+				String Time = Long.toString(duration);
+				Log.i("Time", Time);*/
+	        	v.vibrate(500);
+			}
+			
+	        /*if(((0.95 * y)+(y1*ratioy) + (0.025 * y))  > (getHeight()) && (int)(x1*ratiox)+0.025 * y > (int)(getWidth()/2)){
+		        canvas.drawCircle((float)0.025 * y, (float) (getHeight()-(0.025*y)) , (float) 0.025 * y, p);
+			   	 // Vibrate for 500 milliseconds
+			   	 //v.vibrate(500);
+	        }else if(((0.95 * y)+(y1*ratioy) + (0.025 * y))  > (getHeight()) && (int)(-1)*(x1*ratiox)+0.025 * y > (int)(getWidth()/2)){
+	        	canvas.drawCircle((float)(getWidth()-(0.025 * y)) , (float) (getHeight()-(0.025*y)) , (float) 0.025 * y, p);
+	        	//v.vibrate(500);
+	        }else if(((0.95 * y)+(y1*ratioy) + (0.025 * y))  < (1*getHeight()/3) && (int)(x1*ratiox)+0.025 * y > (int)(getWidth()/2)){
+	        	canvas.drawCircle((float)0.025 * y, (float) ((getHeight()/3)+(0.025*y)) , (float) 0.025 * y, p);
+	        	//v.vibrate(500);
+	        }else if(((0.95 * y)+(y1*ratioy) + (0.025 * y))  < (1*getHeight()/3) && (int)(-1)*(x1*ratiox)+0.025 * y > (int)(getWidth()/2)){
+	        	canvas.drawCircle((float)(getWidth()-(0.025 * y)), (float) ((getHeight()/3)+(0.025*y)) , (float) 0.025 * y, p);
+	        	//v.vibrate(500);
+	        }else if((int)(x1*ratiox)+0.025 * y > (int)(getWidth()/2)){
 	        	canvas.drawCircle( (float)0.025 * y , (float) ((0.95 * y)+(y1*ratioy)) , (float) 0.025 * y, p);
+	        	//v.vibrate(500);
 	        }else  if((int)(-1)*(x1*ratiox)+0.025 * y > (int)(getWidth()/2)){
 	       		canvas.drawCircle( (float)(getWidth()-(0.025 * y)) , (float) ((0.95 * y)+(y1*ratioy)) , (float) 0.025 * y, p);
+	       		//v.vibrate(500);
 	        }else if(((0.95 * y)+(y1*ratioy) + (0.025 * y))  > (getHeight())){
 		        canvas.drawCircle((float) (((x/2)-(x1*ratiox))), (float) (getHeight()-(0.025*y)) , (float) 0.025 * y, p);
+		        //v.vibrate(500);
+	        }else if(((0.95 * y)+(y1*ratioy) + (0.025 * y))  < (1*getHeight()/3)){
+		        canvas.drawCircle((float) (((x/2)-(x1*ratiox))), (float) ((getHeight()/3)+(0.025*y)) , (float) 0.025 * y, p);
+		        //v.vibrate(500);
 	        }else{
-		        canvas.drawCircle((float)(((x/2)-(x1*ratiox))), (float) (((0.95 * y)+(y1*ratioy))) , (float) 0.025 * y, p);
-	        }
-	        //canvas.drawCircle((float)(((x/2)-(x1*ratio))), (float) (((0.95 * y)+y1)) , (float) 0.025 * y, p);
-	    	//Log.i("values", "x -->" + x1 + "y -->" + y1 + " z--> "+ z1);
+		        canvas.drawCircle((int)(((x/2)-(x1*ratiox))), (int) (((0.95 * y)+(y1*ratioy))) , (float) 0.025 * y, p);
+		        //last_x1= (float) (((x/2)-(x1*ratiox)));
+	        	//last_y1 = (float) (((0.95 * y)+(y1*ratioy)));
+	        }*/
 	    }	
     }
 }
